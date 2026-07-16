@@ -73,9 +73,10 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      # -Pandroid.injected.build.abi=arm64-v8a tells the Android Gradle Plugin
-      # to only compile native code for arm64. All other flags are identical to
-      # the full build so the Gradle/Java caches are shared between workflows.
+      # Build arm64-v8a only.
+      # --no-build-cache forces every task to run and write output files to disk.
+      # Without this, Gradle may mark tasks UP-TO-DATE from a previous full-ABI
+      # run and skip writing the APK, leaving the output directory empty.
       - name: Build arm64 debug APK
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
@@ -83,10 +84,17 @@ jobs:
           ./gradlew :TMessagesProj_App:assembleAfatDebug \
             --no-daemon \
             --parallel \
-            --build-cache \
+            --no-build-cache \
             -Dorg.gradle.jvmargs="-Xmx6g -XX:+UseParallelGC" \
             -Pandroid.useAndroidX=true \
             -Pandroid.injected.build.abi=arm64-v8a
+
+      # Show what was produced so future failures are easy to diagnose
+      - name: List APK output directory
+        if: always()
+        run: |
+          echo "=== TMessagesProj_App/build/outputs ==="
+          find TMessagesProj_App/build/outputs -name "*.apk" 2>/dev/null || echo "(no .apk files found)"
 
       - name: Upload arm64 APK
         uses: actions/upload-artifact@v4
