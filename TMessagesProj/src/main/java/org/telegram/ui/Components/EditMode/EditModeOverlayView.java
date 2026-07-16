@@ -572,8 +572,8 @@ public class EditModeOverlayView extends FrameLayout implements EditModeManager.
         return d;
     }
 
-    private static View makeDivider() {
-        View v = new View(null);
+    private View makeDivider() {
+        View v = new View(getContext());
         v.setBackgroundColor(0x33FFFFFF);
         return v;
     }
