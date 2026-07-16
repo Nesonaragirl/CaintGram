@@ -24,9 +24,11 @@ import android.widget.TextView;
 import org.telegram.messenger.AndroidUtilities;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 
@@ -87,7 +89,9 @@ public class EditModeOverlayView extends FrameLayout implements EditModeManager.
     private       String            hoverSlotId = null; // slot being hovered over during drag
 
     // Slot → screen position mapping (populated in onLayout / from host)
-    private final Map<String, RectF> slotRects = new LinkedHashMap<>();
+    private final Map<String, RectF> slotRects      = new LinkedHashMap<>();
+    // Slots explicitly registered via setSlotView() — not overwritten by onLayout defaults
+    private final Set<String>        registeredSlots = new HashSet<>();
 
     // Chip touch tracking
     private float touchStartX, touchStartY;
@@ -120,8 +124,7 @@ public class EditModeOverlayView extends FrameLayout implements EditModeManager.
         mutedPaint.setTextSize(dp(9));
         overlayDimPaint.setColor(0x60000000);
 
-        buildDefaultSlotRects();
-        addControlPanel();
+        addControlPanel(); // slot rects are built in onLayout() once we have real dimensions
     }
 
     // ── Slot rect registration (called by host with actual view bounds) ────────
@@ -130,15 +133,82 @@ public class EditModeOverlayView extends FrameLayout implements EditModeManager.
      * Call this from onLayout / onGlobalLayout in LaunchActivity / fragments.
      */
     public void registerSlotRect(String slotId, int left, int top, int right, int bottom) {
+        registeredSlots.add(slotId);          // mark as "real" — onLayout won't overwrite
         slotRects.put(slotId, new RectF(left, top, right, bottom));
         invalidate();
     }
 
-    /** Default rects based on a typical portrait phone layout (approximate). */
-    private void buildDefaultSlotRects() {
-        // These are overridden by registerSlotRect() once the real views lay out.
-        // Values here are in px estimates for a 1080-wide portrait screen.
-        // They serve as fallback so the overlay renders immediately on entry.
+    /** Called every time our size changes; fills default slot rects from screen dimensions. */
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        if (changed) rebuildDefaultRects();
+    }
+
+    /**
+     * Compute approximate slot positions from screen dimensions.
+     * Slots already pinned via registerSlotRect / setSlotView are skipped.
+     * All measurements use real resource queries for status-bar / nav-bar heights.
+     */
+    private void rebuildDefaultRects() {
+        int W = getWidth();
+        int H = getHeight();
+        if (W == 0 || H == 0) return;
+
+        int statusH    = getSystemBarHeight("status_bar_height",    24);
+        int navH       = getSystemBarHeight("navigation_bar_height", 0);
+        int actionBarH = dp(56);
+        int tabBarH    = dp(56);
+        int inputH     = dp(52);
+
+        int topBarTop  = statusH;
+        int topBarBot  = statusH + actionBarH;
+        int tabBarBot  = H - navH;
+        int tabBarTop  = tabBarBot - tabBarH;
+        int inputTop   = tabBarTop - inputH;
+
+        putDefault(LayoutConfig.SLOT_TOPBAR_LEFT,
+                0,         topBarTop, (int)(W * 0.25f), topBarBot);
+        putDefault(LayoutConfig.SLOT_TOPBAR_CENTER,
+                (int)(W * 0.25f), topBarTop, (int)(W * 0.75f), topBarBot);
+        putDefault(LayoutConfig.SLOT_TOPBAR_RIGHT,
+                (int)(W * 0.75f), topBarTop, W, topBarBot);
+
+        float sw = W / 5f;
+        putDefault(LayoutConfig.SLOT_BOTTOMBAR_1, 0,          tabBarTop, (int)sw,       tabBarBot);
+        putDefault(LayoutConfig.SLOT_BOTTOMBAR_2, (int)sw,    tabBarTop, (int)(sw*2),   tabBarBot);
+        putDefault(LayoutConfig.SLOT_BOTTOMBAR_3, (int)(sw*2),tabBarTop, (int)(sw*3),   tabBarBot);
+        putDefault(LayoutConfig.SLOT_BOTTOMBAR_4, (int)(sw*3),tabBarTop, (int)(sw*4),   tabBarBot);
+        putDefault(LayoutConfig.SLOT_BOTTOMBAR_5, (int)(sw*4),tabBarTop, W,             tabBarBot);
+
+        putDefault(LayoutConfig.SLOT_CHATINPUT_LEFT,
+                0,         inputTop, (int)(W * 0.20f), tabBarTop);
+        putDefault(LayoutConfig.SLOT_CHATINPUT_CENTER,
+                (int)(W * 0.20f), inputTop, (int)(W * 0.80f), tabBarTop);
+        putDefault(LayoutConfig.SLOT_CHATINPUT_RIGHT,
+                (int)(W * 0.80f), inputTop, W, tabBarTop);
+
+        putDefault(LayoutConfig.SLOT_SIDEBAR_MAIN,
+                0, topBarBot, dp(220), tabBarTop);
+
+        invalidate();
+    }
+
+    /** Only writes the rect if this slot wasn't explicitly registered via setSlotView. */
+    private void putDefault(String slotId, int l, int t, int r, int b) {
+        if (!registeredSlots.contains(slotId)) {
+            slotRects.put(slotId, new RectF(l, t, r, b));
+        }
+    }
+
+    /** Reads a system dimen resource (e.g. status_bar_height) with a dp fallback. */
+    private int getSystemBarHeight(String dimenName, int fallbackDp) {
+        try {
+            android.content.res.Resources res = getContext().getResources();
+            int id = res.getIdentifier(dimenName, "dimen", "android");
+            if (id > 0) return res.getDimensionPixelSize(id);
+        } catch (Exception ignored) {}
+        return dp(fallbackDp);
     }
 
     /**
