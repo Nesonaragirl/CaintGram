@@ -1,16 +1,6 @@
-modules = ["java-graalvm22.3", "nodejs-20"]
+modules = ["java-graalvm22.3"]
 [agent]
 expertMode = true
 
 [nix]
 channel = "stable-25_05"
-
-[workflows]
-
-[[ports]]
-localPort = 5000
-externalPort = 80
-
-[[ports]]
-localPort = 5001
-externalPort = 3001
