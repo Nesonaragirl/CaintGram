@@ -89,17 +89,20 @@ jobs:
             -Pandroid.useAndroidX=true \
             -Pandroid.injected.build.abi=arm64-v8a
 
-      # Show what was produced so future failures are easy to diagnose
-      - name: List APK output directory
+      # Show every APK in the workspace so we always know the real output path
+      - name: Find all APKs in workspace
         if: always()
         run: |
-          echo "=== TMessagesProj_App/build/outputs ==="
-          find TMessagesProj_App/build/outputs -name "*.apk" 2>/dev/null || echo "(no .apk files found)"
+          echo "=== All .apk files under workspace ==="
+          find . -name "*.apk" 2>/dev/null | sort || echo "(no .apk files found)"
+          echo ""
+          echo "=== build/outputs directories ==="
+          find . -type d -name "outputs" 2>/dev/null | sort
 
       - name: Upload arm64 APK
         uses: actions/upload-artifact@v4
         with:
           name: fluxgram-arm64-debug
-          path: TMessagesProj_App/build/outputs/apk/**/*.apk
+          path: "**/build/outputs/apk/**/*.apk"
           if-no-files-found: error
           retention-days: 7
