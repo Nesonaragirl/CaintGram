@@ -10,13 +10,13 @@ package com.fluxgram.api;
  * below (UI, Events, Settings, Dialogs, Utils) is a self-contained namespace
  * that can evolve independently.
  *
- * This is the foundation layer only: no plugin system, no sandboxing, and
- * no real functionality yet. All module methods are placeholders that will
- * be filled in over time without changing this public API.
+ * Still no plugin system and no sandboxing -- that comes later. This stage
+ * wires Events and UI up to real Telegram behavior while keeping the public
+ * API unchanged.
  *
  * Usage:
- *   Flux.UI.createButton(...);
- *   Flux.Events.on("someEvent", callback);
+ *   Flux.UI.createButton("Tap me").onClick(data -> ...);
+ *   Flux.Events.on("messagesReceived", data -> ...);
  *   Flux.Settings.get("key");
  *   Flux.Dialogs.alert("Title", "Text");
  */
@@ -28,7 +28,25 @@ public final class Flux {
     public static final FluxDialogs Dialogs = new FluxDialogs();
     public static final FluxUtils Utils = new FluxUtils();
 
+    private static boolean initialized;
+
     private Flux() {
         // Flux is a static entry point and is never instantiated.
+    }
+
+    /**
+     * Wires Flux into the running Telegram client -- currently just attaches
+     * the NotificationCenter -> Flux.Events bridge. Safe to call more than
+     * once; only does real work the first time.
+     *
+     * Should be called once core services are up, e.g. from
+     * ApplicationLoader.postInitApplication().
+     */
+    public static void init() {
+        if (initialized) {
+            return;
+        }
+        initialized = true;
+        FluxNotificationBridge.attach();
     }
 }
