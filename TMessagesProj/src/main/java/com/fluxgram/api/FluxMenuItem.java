@@ -17,8 +17,12 @@ import org.telegram.ui.ActionBar.ActionBarMenuSubItem;
  * Backs Flux.UI.createMenuItem(...). Wraps Telegram's own
  * ActionBarMenuSubItem -- the same row component Telegram uses for its
  * native popup/context menus -- without exposing that class to callers.
+ *
+ * Implements FluxViewProvider so it can also be placed inside a
+ * FluxContainer (Flux.UI.ChatMenu, Flux.UI.MessageMenu, etc), in addition
+ * to its own attach().
  */
-final class FluxMenuItem implements FluxComponent {
+final class FluxMenuItem implements FluxComponent, FluxViewProvider {
 
     private static final String TAG = "Flux.UI.MenuItem";
 
@@ -29,11 +33,8 @@ final class FluxMenuItem implements FluxComponent {
         view.setTextAndIcon(text != null ? text : "", iconResId);
     }
 
-    /**
-     * Package-private escape hatch for other Flux internals. Never exposed
-     * publicly.
-     */
-    View getView() {
+    @Override
+    public View getView() {
         return view;
     }
 
