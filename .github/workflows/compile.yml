@@ -34,7 +34,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Compile debug (fast, no full assemble)
-        run: ./gradlew :TMessagesProj_App:compileDebugJavaWithJavac --parallel --build-cache -x lint -x test
+        run: ./gradlew :TMessagesProj_App:compileAfatDebugJavaWithJavac --parallel --build-cache -x lint -x test
 
       - name: Upload build outputs (optional)
         if: always()
