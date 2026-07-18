@@ -39,6 +39,17 @@ public interface FluxComponent {
     FluxComponent onClick(FluxCallback callback);
 
     /**
+     * Attaches the component to the current foreground screen so it's
+     * actually visible, using whatever placement makes sense for its type
+     * (e.g. a corner overlay for buttons/menu items). Dialogs are already
+     * shown as soon as they're created, so this is a no-op for them.
+     *
+     * No-ops (and logs) if there's currently no foreground Activity to
+     * attach to.
+     */
+    FluxComponent attach();
+
+    /**
      * Permanently removes the component from wherever it's attached
      * (detaches its view from its parent, dismisses it if it's a dialog).
      */
