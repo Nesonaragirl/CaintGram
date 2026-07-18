@@ -75,6 +75,14 @@ final class FluxDialog implements FluxComponent {
     }
 
     @Override
+    public FluxComponent attach() {
+        // A dialog is already shown as soon as it's created (see the
+        // constructor), so there's nowhere further to attach it to.
+        Log.d(TAG, "attach: dialogs are shown immediately; nothing to do.");
+        return this;
+    }
+
+    @Override
     public void remove() {
         dialog.dismiss();
     }
