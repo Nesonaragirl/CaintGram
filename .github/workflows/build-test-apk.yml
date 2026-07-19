@@ -62,7 +62,7 @@ jobs:
         run: >
           ./gradlew :TMessagesProj_App:assembleAfatDebug
           --parallel --build-cache
-          -x lint -x test -x lintVitalAfatDebug
+          -x lint -x test
           ${{ steps.abi.outputs.flag }}
 
       - name: Upload APK
