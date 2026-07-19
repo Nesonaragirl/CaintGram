@@ -68,6 +68,10 @@ dependencies {
 
 //    implementation 'com.google.mlkit:translate:17.0.3'
 
+    // Flux plugin system: pure-Java Lua runtime used to run plugin scripts
+    // in their own isolated Lua state (see com.fluxgram.plugin).
+    implementation 'org.luaj:luaj-jse:3.0.1'
+
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0") {
             because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
