@@ -90,6 +90,12 @@ public final class PluginManager {
         return Collections.unmodifiableList(loadedPlugins);
     }
 
+    /** Plugins that failed to load on the last loadAll() call, with details for the error popup. */
+    public static List<PluginLoadFailure> getLoadFailures() {
+        return Collections.unmodifiableList(loadFailures);
+    }
+    }
+
     /**
      * Scans the plugins root directory and (re)loads every valid plugin
      * found there. Clears anything previously loaded first. Leftover import
