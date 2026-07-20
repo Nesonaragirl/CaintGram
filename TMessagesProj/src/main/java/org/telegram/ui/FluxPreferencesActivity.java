@@ -26,11 +26,14 @@ import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalRecyclerView;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 /**
@@ -46,32 +49,7 @@ public class FluxPreferencesActivity extends BaseFragment {
 
     private static final String FLUXGRAM_VERSION = "0.1.0 - dev";
     private static final String GITHUB_REPOSITORY_URL = "https://github.com/Nesonaragirl/Fluxgram";
-    private static final String CHANGELOG_URL = "https://github.com/Nesonaragirl/Fluxgram/blob/los/CHANGELOG.md";
-
-    /**
-     * Log entries shown in the "Changelogs" popup. Kept in sync by hand with
-     * CHANGELOG.md on the los branch (linked at the bottom of the popup for
-     * the full history).
-     */
-    private static final String CHANGELOG_ENTRIES =
-            "Plugins\n" +
-            "\u2022 Added manifest.json plugin manifest format\n" +
-            "\u2022 Added PluginManifest parser with validation\n" +
-            "\u2022 Added PluginManager: scans flux_plugins/, loads each plugin's Entrypoint script\n" +
-            "\u2022 Wired plugin loading into app startup\n" +
-            "\u2022 Added zip/folder import for plugins\n" +
-            "\u2022 My Plugins now lists installed plugins with visibility toggles\n" +
-            "\u2022 Added retry queue so UI components attach reliably\n\n" +
-            "FluxGram Preferences\n" +
-            "\u2022 Added FluxGram Preferences screen under Settings\n" +
-            "\u2022 Modernized layout with real switch toggles\n" +
-            "\u2022 Removed the standalone Plugins on/off row\n" +
-            "\u2022 Removed the Appearance section\n" +
-            "\u2022 Wired up Changelog, GitHub Repository, and About FluxGram\n" +
-            "\u2022 Renamed \"Check for Updates\" to \"Versions\"\n\n" +
-            "Build\n" +
-            "\u2022 Fixed R8 release build failure from the LuaJ dependency\n" +
-            "\u2022 Added GitHub Actions CI workflow";
+    private static final String CHANGELOG_ASSET = "changelogs.md";
 
     private static final int ID_MY_PLUGINS = 1;
     private static final int ID_AUTO_UPDATE_PLUGINS = 3;
@@ -149,17 +127,62 @@ public class FluxPreferencesActivity extends BaseFragment {
         }
     }
 
-    /** Shows the current version and recent log entries in an in-app popup. */
+    /**
+     * Shows the current version and recent log entries in an in-app popup.
+     * The text is read from the bundled {@code changelogs.md} asset, so this
+     * never has to reach out to the GitHub repository or its commit history.
+     */
     private void showChangelogDialog() {
         if (getContext() == null) {
             return;
         }
-        String message = FLUXGRAM_VERSION + "\n\n" + CHANGELOG_ENTRIES + "\n\nFull history: " + CHANGELOG_URL;
+        String message = FLUXGRAM_VERSION + "\n\n" + loadChangelogText();
         new AlertDialog.Builder(getContext(), getResourceProvider())
                 .setTitle("Changelogs")
                 .setMessage(message)
                 .setPositiveButton("OK", null)
                 .show();
+    }
+
+    /** Reads changelogs.md from assets and turns its lightweight markdown into plain text for the popup. */
+    private String loadChangelogText() {
+        StringBuilder sb = new StringBuilder();
+        try (InputStream is = ApplicationLoader.applicationContext.getAssets().open(CHANGELOG_ASSET);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            String line;
+            boolean first = true;
+            while ((line = reader.readLine()) != null) {
+                String formatted = formatChangelogLine(line);
+                if (formatted == null) {
+                    continue;
+                }
+                if (!first) {
+                    sb.append('\n');
+                }
+                sb.append(formatted);
+                first = false;
+            }
+        } catch (IOException e) {
+            return "Couldn't load the changelog.";
+        }
+        return sb.toString();
+    }
+
+    /** Filters a single markdown line down to plain text suitable for an AlertDialog message. */
+    private String formatChangelogLine(String line) {
+        if (line.isEmpty()) {
+            return "";
+        }
+        if (line.startsWith("## ")) {
+            return "\n" + line.substring(3);
+        }
+        if (line.startsWith("# ")) {
+            return null;
+        }
+        if (line.startsWith("- ")) {
+            return "\u2022 " + line.substring(2);
+        }
+        return line;
     }
 
     private void openUrl(String url) {
