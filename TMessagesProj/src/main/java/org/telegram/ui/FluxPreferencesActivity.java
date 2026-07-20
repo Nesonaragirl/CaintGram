@@ -10,7 +10,7 @@ import android.widget.FrameLayout;
 import androidx.documentfile.provider.DocumentFile;
 
 import com.caint.plugin.CaintPlugin;
-import com.fluxgram.plugin.PluginManager;
+import com.caint.plugin.PluginManager;
 import com.fluxgram.plugin.PluginManifest;
 
 import org.telegram.messenger.ApplicationLoader;
