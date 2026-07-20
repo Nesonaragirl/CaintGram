@@ -9,7 +9,7 @@ import android.widget.FrameLayout;
 
 import androidx.documentfile.provider.DocumentFile;
 
-import com.fluxgram.plugin.FluxPlugin;
+import com.caint.plugin.CaintPlugin;
 import com.fluxgram.plugin.PluginManager;
 import com.fluxgram.plugin.PluginManifest;
 
