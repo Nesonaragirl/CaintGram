@@ -5,7 +5,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import com.caint.plugin.CaintPlugin;
-import com.fluxgram.plugin.PluginManager;
+import com.caint.plugin.PluginManager;
 
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
