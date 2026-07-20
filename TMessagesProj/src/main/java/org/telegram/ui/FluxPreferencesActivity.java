@@ -255,7 +255,7 @@ CaintPlugin plugin = PluginManager.importFromZip(tempZip);
                 return;
             }
             copyDocumentTree(sourceTree, tempFolder);
-            FluxPlugin plugin = PluginManager.importFromFolder(tempFolder);
+CaintPlugin plugin = PluginManager.importFromFolder(tempFolder);
             showImportSuccess(plugin);
         } catch (IOException | PluginManifest.ManifestException e) {
             showImportError(e.getMessage() != null ? e.getMessage() : "Couldn't import that folder.");
