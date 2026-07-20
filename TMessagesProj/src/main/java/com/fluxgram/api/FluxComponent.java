@@ -8,6 +8,12 @@ package com.fluxgram.api;
  *
  * Implementations wrap a real Android/Telegram view internally but never
  * expose it through this interface -- callers only ever see FluxComponent.
+ *
+ * Every component looks like a native Telegram element by default (it's
+ * styled from Telegram's own Theme colors, and follows the user's chosen
+ * Telegram theme). setBackgroundColor()/setTextColor() let a plugin opt
+ * into a literal, fixed color instead -- passing null clears the override
+ * and reverts to Telegram's own themed look.
  */
 public interface FluxComponent {
 
@@ -21,6 +27,22 @@ public interface FluxComponent {
      * Sets the component's icon from an Android drawable resource id.
      */
     FluxComponent setIcon(int iconResId);
+
+    /**
+     * Overrides the component's background color (an ARGB int, e.g. from
+     * android.graphics.Color). Pass null to clear the override and go back
+     * to Telegram's own themed default -- which is what every component
+     * uses out of the box, before this is ever called.
+     */
+    FluxComponent setBackgroundColor(Integer color);
+
+    /**
+     * Overrides the component's text/icon color (an ARGB int, e.g. from
+     * android.graphics.Color). Pass null to clear the override and go back
+     * to Telegram's own themed default -- which is what every component
+     * uses out of the box, before this is ever called.
+     */
+    FluxComponent setTextColor(Integer color);
 
     /**
      * Shows or hides the component.
