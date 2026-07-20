@@ -52,6 +52,22 @@ public final class PluginManager {
     private static final String IMPORT_STAGING_PREFIX = "._import_";
 
     private static final List<CaintPlugin> loadedPlugins = new ArrayList<>();
+    private static final List<PluginLoadFailure> loadFailures = new ArrayList<>();
+
+    /** Records why a plugin failed to load, so the UI can show it (with full logs) to the user. */
+    public static final class PluginLoadFailure {
+        public final String id;
+        public final String pluginName;
+        public final String message;
+        public final String stackTrace;
+
+        PluginLoadFailure(String id, String pluginName, String message, String stackTrace) {
+            this.id = id;
+            this.pluginName = pluginName;
+            this.message = message;
+            this.stackTrace = stackTrace;
+        }
+    }
 
     private PluginManager() {
     }
