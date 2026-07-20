@@ -11,7 +11,7 @@ import androidx.documentfile.provider.DocumentFile;
 
 import com.caint.plugin.CaintPlugin;
 import com.caint.plugin.PluginManager;
-import com.fluxgram.plugin.PluginManifest;
+import com.caint.plugin.PluginManifest;
 
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.R;
