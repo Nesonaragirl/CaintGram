@@ -106,6 +106,7 @@ public final class PluginManager {
      */
     public static List<CaintPlugin> loadAll() {
         loadedPlugins.clear();
+        loadFailures.clear();
 
         File root = getPluginsRoot();
         File[] pluginDirs = root.listFiles(new FileFilter() {
