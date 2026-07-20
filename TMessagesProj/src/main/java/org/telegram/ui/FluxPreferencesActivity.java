@@ -314,7 +314,7 @@ CaintPlugin plugin = PluginManager.importFromFolder(tempFolder);
         file.delete();
     }
 
-    private void showImportSuccess(FluxPlugin plugin) {
+    private void showImportSuccess(CaintPlugin plugin) {
         if (getContext() == null) {
             return;
         }
