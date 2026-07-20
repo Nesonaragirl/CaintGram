@@ -32,7 +32,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 
-import com.fluxgram.api.Flux;
+import com.caint.api.Caint;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
