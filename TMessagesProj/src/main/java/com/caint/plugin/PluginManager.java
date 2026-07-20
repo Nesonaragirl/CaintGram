@@ -387,6 +387,7 @@ public final class PluginManager {
             manifestJson = readFile(manifestFile);
         } catch (IOException e) {
             Log.w(TAG, "Skipping \"" + id + "\": failed to read manifest.json", e);
+            loadFailures.add(new PluginLoadFailure(id, null, "Failed to read manifest.json: " + e.getMessage(), Log.getStackTraceString(e)));
             return null;
         }
 
