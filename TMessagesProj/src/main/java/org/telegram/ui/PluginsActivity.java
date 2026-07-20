@@ -64,7 +64,7 @@ public class PluginsActivity extends BaseFragment {
     private void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         items.add(UItem.asHeader("My plugins"));
 
-        List<FluxPlugin> plugins = PluginManager.getLoadedPlugins();
+        List<CaintPlugin> plugins = PluginManager.getLoadedPlugins();
         if (plugins.isEmpty()) {
             items.add(UItem.asShadow("No plugins installed yet."));
         } else {
@@ -92,7 +92,7 @@ public class PluginsActivity extends BaseFragment {
         } else if (item.id == ID_GET_NEW_PLUGINS) {
             // TODO: open the plugin catalog/browser once it exists.
         } else if (item.id >= ID_PLUGIN_VISIBILITY_BASE) {
-            List<FluxPlugin> plugins = PluginManager.getLoadedPlugins();
+        List<CaintPlugin> plugins = PluginManager.getLoadedPlugins();
             int index = item.id - ID_PLUGIN_VISIBILITY_BASE;
             if (index >= 0 && index < plugins.size()) {
                 FluxPlugin plugin = plugins.get(index);
