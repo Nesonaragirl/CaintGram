@@ -29,7 +29,6 @@ import java.util.ArrayList;
 public class FluxPreferencesActivity extends BaseFragment {
 
     private static final int ID_MY_PLUGINS = 1;
-    private static final int ID_PLUGINS_TOGGLE = 2;
     private static final int ID_AUTO_UPDATE_PLUGINS = 3;
     private static final int ID_IMPORT_FROM_FILE = 4;
 
@@ -43,6 +42,9 @@ public class FluxPreferencesActivity extends BaseFragment {
     private static final int ID_CHANGELOG = 11;
     private static final int ID_GITHUB_REPOSITORY = 12;
     private static final int ID_ABOUT_FLUXGRAM = 13;
+
+    private boolean autoUpdatePlugins = true;
+    private boolean customFonts = false;
 
     private UniversalRecyclerView listView;
 
@@ -74,8 +76,7 @@ public class FluxPreferencesActivity extends BaseFragment {
         // Plugins
         items.add(UItem.asHeader("Plugins"));
         items.add(UItem.asButton(ID_MY_PLUGINS, R.drawable.settings_features, "My Plugins", "3"));
-        items.add(UItem.asButton(ID_PLUGINS_TOGGLE, "Plugins", "On"));
-        items.add(UItem.asButton(ID_AUTO_UPDATE_PLUGINS, "Auto-Update Plugins", "On"));
+        items.add(UItem.asSwitch(ID_AUTO_UPDATE_PLUGINS, "Auto-Update Plugins").setChecked(autoUpdatePlugins));
         items.add(UItem.asButton(ID_IMPORT_FROM_FILE, "Import from File", ""));
         items.add(UItem.asShadow(null));
 
@@ -83,7 +84,7 @@ public class FluxPreferencesActivity extends BaseFragment {
         items.add(UItem.asHeader("Appearance"));
         items.add(UItem.asButton(ID_CUSTOM_THEMES, "Custom Themes", "2"));
         items.add(UItem.asButton(ID_APP_ICON, "App Icon", "Default"));
-        items.add(UItem.asButton(ID_CUSTOM_FONTS, "Custom Fonts", "Off"));
+        items.add(UItem.asSwitch(ID_CUSTOM_FONTS, "Custom Fonts").setChecked(customFonts));
         items.add(UItem.asButton(ID_BUBBLE_STYLE, "Bubble Style", "Rounded"));
         items.add(UItem.asButton(ID_ACCENT_COLOR, "Accent Color", ""));
         items.add(UItem.asShadow("Manage the appearance, plugins, and updates of your FluxGram client."));
@@ -100,6 +101,16 @@ public class FluxPreferencesActivity extends BaseFragment {
     private void onClick(UItem item, View view, int position, float x, float y) {
         if (item.id == ID_MY_PLUGINS) {
             presentFragment(new PluginsActivity());
+        } else if (item.id == ID_AUTO_UPDATE_PLUGINS) {
+            autoUpdatePlugins = !autoUpdatePlugins;
+            if (listView != null && listView.adapter != null) {
+                listView.adapter.update(true);
+            }
+        } else if (item.id == ID_CUSTOM_FONTS) {
+            customFonts = !customFonts;
+            if (listView != null && listView.adapter != null) {
+                listView.adapter.update(true);
+            }
         }
         // All other rows are placeholders for now and intentionally have no action.
     }
