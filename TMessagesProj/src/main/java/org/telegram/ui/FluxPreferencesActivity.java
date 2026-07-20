@@ -255,7 +255,7 @@ public class FluxPreferencesActivity extends BaseFragment {
                 return;
             }
             copyDocumentTree(sourceTree, tempFolder);
-CaintPlugin plugin = PluginManager.importFromFolder(tempFolder);
+            CaintPlugin plugin = PluginManager.importFromFolder(tempFolder);
             showImportSuccess(plugin);
         } catch (IOException | PluginManifest.ManifestException e) {
             showImportError(e.getMessage() != null ? e.getMessage() : "Couldn't import that folder.");
