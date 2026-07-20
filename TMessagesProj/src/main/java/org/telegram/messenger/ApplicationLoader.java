@@ -274,7 +274,7 @@ public class ApplicationLoader extends Application {
         }
         BillingController.getInstance().startConnection();
 
-        // Flux API wrapper: attach the NotificationCenter -> Flux.Events
+        // Caint API wrapper: attach the NotificationCenter -> Caint.Events
         // bridge now that accounts and NotificationCenter are ready.
         Flux.init();
     }
