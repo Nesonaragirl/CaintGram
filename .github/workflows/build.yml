@@ -24,7 +24,19 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Cache Android SDK components (NDK/CMake)
+        id: sdk-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
+            ${{ env.ANDROID_HOME }}/cmake/3.10.2.4988404
+            ${{ env.ANDROID_HOME }}/platforms/android-35
+            ${{ env.ANDROID_HOME }}/build-tools/35.0.0
+          key: android-sdk-ndk27-cmake3.10-platform35-buildtools35
+
       - name: Install SDK components (platform, build-tools, NDK, CMake)
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
         run: |
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018" "cmake;3.10.2.4988404"
@@ -42,14 +54,14 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build standard App (Play variant, debug, full/all ABIs, no minify)
-        run: ./gradlew :TMessagesProj_App:assembleAfatDebug --stacktrace
+      - name: Build arm64 debug APK (fast, single-ABI - covers Redmi/HyperOS and virtually all modern phones)
+        run: ./gradlew :TMessagesProj_App:assembleArm64Debug --stacktrace --build-cache
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: fluxgram-app-debug
+          name: fluxgram-app-debug-arm64
           path: TMessagesProj_App/build/outputs/apk/**/*.apk
           if-no-files-found: error
