@@ -60,6 +60,7 @@ public final class PluginManifest {
     public final String icon;
     public final List<String> tags;
     public final String updateUrl;
+    public final List<PluginSetting> settings;
 
     private PluginManifest(
         String name,
@@ -73,7 +74,8 @@ public final class PluginManifest {
         String homepage,
         String icon,
         List<String> tags,
-        String updateUrl
+        String updateUrl,
+        List<PluginSetting> settings
     ) {
         this.name = name;
         this.version = version;
@@ -87,6 +89,7 @@ public final class PluginManifest {
         this.icon = icon;
         this.tags = tags;
         this.updateUrl = updateUrl;
+        this.settings = settings;
     }
 
     /**
@@ -130,11 +133,40 @@ public final class PluginManifest {
         List<String> permissions = optStringList(root, "Permissions");
         List<String> containers = optStringList(root, "Containers");
         List<String> tags = optStringList(root, "Tags");
+        List<PluginSetting> settings = optSettingsList(root, "Settings");
 
         return new PluginManifest(
             name, version, author, description, apiVersion, entrypoint,
-            permissions, containers, homepage, icon, tags, updateUrl
+            permissions, containers, homepage, icon, tags, updateUrl, settings
         );
+    }
+
+    /**
+     * Parses the optional "Settings" array: the on/off options a plugin
+     * exposes in the "My Plugins" UI, e.g.
+     * "Settings": [{"Key": "stealth_mode", "Label": "Stealth Mode", "Default": false}]
+     * Entries missing a Key or Label are skipped.
+     */
+    private static List<PluginSetting> optSettingsList(JSONObject root, String key) {
+        JSONArray array = root.optJSONArray(key);
+        if (array == null) {
+            return Collections.emptyList();
+        }
+        List<PluginSetting> result = new ArrayList<>(array.length());
+        for (int i = 0; i < array.length(); i++) {
+            JSONObject obj = array.optJSONObject(i);
+            if (obj == null) {
+                continue;
+            }
+            String settingKey = optNonBlankString(obj, "Key");
+            String label = optNonBlankString(obj, "Label");
+            if (settingKey == null || label == null) {
+                continue;
+            }
+            boolean defaultValue = obj.optBoolean("Default", true);
+            result.add(new PluginSetting(settingKey, label, defaultValue));
+        }
+        return Collections.unmodifiableList(result);
     }
 
     private static String optNonBlankString(JSONObject root, String key) {
@@ -163,6 +195,19 @@ public final class PluginManifest {
     /** Whether this manifest declares the given permission (case-sensitive, matches the Permissions list). */
     public boolean hasPermission(String permission) {
         return permissions.contains(permission);
+    }
+
+    /** A single on/off option a plugin exposes, shown as a toggle when the plugin is expanded. */
+    public static final class PluginSetting {
+        public final String key;
+        public final String label;
+        public final boolean defaultValue;
+
+        public PluginSetting(String key, String label, boolean defaultValue) {
+            this.key = key;
+            this.label = label;
+            this.defaultValue = defaultValue;
+        }
     }
 
     /** Thrown when a manifest.json is malformed or missing a required field. */
