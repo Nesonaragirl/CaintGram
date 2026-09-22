@@ -1,17 +1,10 @@
 package org.telegram.ui;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.view.View;
 import android.widget.FrameLayout;
-
-import androidx.documentfile.provider.DocumentFile;
-
-import com.caint.plugin.CaintPlugin;
-import com.caint.plugin.PluginManager;
-import com.caint.plugin.PluginManifest;
 
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.R;
@@ -20,7 +13,6 @@ import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BackDrawable;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.IconBackgroundColors;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.UItem;
@@ -28,12 +20,9 @@ import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalRecyclerView;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
@@ -41,9 +30,10 @@ import java.util.ArrayList;
  * FluxGram Preferences screen, opened from the top row in Settings.
  *
  * Sections:
- *  - Plugins: entry point into the plugin system (see {@link PluginsActivity}).
- *             "My Plugins" and "Import from File" (zip or folder) are wired
- *             up; Auto-Update Plugins is a placeholder toggle.
+ *  - Plugins: entry point into the plugin system. "My Plugins" opens
+ *             {@link PluginsActivity}, which now also owns importing
+ *             plugins from a file; Auto-Update Plugins is a placeholder
+ *             toggle.
  *  - Updates & About: current version, changelog, GitHub repository, and about links.
  *
  * Rows use SettingsActivity.SettingCell - the same gradient-icon card used for the
@@ -58,15 +48,11 @@ public class FluxPreferencesActivity extends BaseFragment {
 
     private static final int ID_MY_PLUGINS = 1;
     private static final int ID_AUTO_UPDATE_PLUGINS = 3;
-    private static final int ID_IMPORT_FROM_FILE = 4;
 
     private static final int ID_VERSIONS = 10;
     private static final int ID_CHANGELOG = 11;
     private static final int ID_GITHUB_REPOSITORY = 12;
     private static final int ID_ABOUT_FLUXGRAM = 13;
-
-    private static final int REQUEST_CODE_IMPORT_ZIP = 4001;
-    private static final int REQUEST_CODE_IMPORT_FOLDER = 4002;
 
     private boolean autoUpdatePlugins = true;
 
@@ -99,10 +85,9 @@ public class FluxPreferencesActivity extends BaseFragment {
     private void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         // Plugins
         items.add(UItem.asHeader("Plugins"));
-        items.add(SettingsActivity.SettingCell.Factory.of(ID_MY_PLUGINS, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "My Plugins", null, "3"));
+        items.add(SettingsActivity.SettingCell.Factory.of(ID_MY_PLUGINS, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "My Plugins", null, String.valueOf(com.caint.plugin.PluginManager.getLoadedPlugins().size())));
         items.add(UItem.asSwitch(ID_AUTO_UPDATE_PLUGINS, "Auto-Update Plugins").setChecked(autoUpdatePlugins));
-        items.add(SettingsActivity.SettingCell.Factory.of(ID_IMPORT_FROM_FILE, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.settings_data, "Import from File"));
-        items.add(UItem.asShadow(null));
+        items.add(UItem.asShadow("Import, enable, and configure plugins from My Plugins."));
 
         // Updates & About
         items.add(UItem.asHeader("Updates & About"));
@@ -121,8 +106,6 @@ public class FluxPreferencesActivity extends BaseFragment {
             if (listView != null && listView.adapter != null) {
                 listView.adapter.update(true);
             }
-        } else if (item.id == ID_IMPORT_FROM_FILE) {
-            showImportSourcePicker();
         } else if (item.id == ID_CHANGELOG) {
             showChangelogDialog();
         } else if (item.id == ID_GITHUB_REPOSITORY) {
@@ -198,7 +181,7 @@ public class FluxPreferencesActivity extends BaseFragment {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             getContext().startActivity(intent);
         } catch (Exception e) {
-            showImportError("Couldn't open a browser on this device.");
+            // No browser available on this device; nothing more we can do here.
         }
     }
 
@@ -211,152 +194,6 @@ public class FluxPreferencesActivity extends BaseFragment {
                 .setMessage("FluxGram " + FLUXGRAM_VERSION + "\n\nA Telegram client fork with a Lua-based plugin system, built on top of DrKLO/Telegram.\n\n" + GITHUB_REPOSITORY_URL)
                 .setPositiveButton("OK", null)
                 .show();
-    }
-
-    /** Lets the user choose whether they're importing a .zip archive or an unpacked folder. */
-    private void showImportSourcePicker() {
-        if (getContext() == null) {
-            return;
-        }
-        new AlertDialog.Builder(getContext(), getResourceProvider())
-                .setTitle("Import Plugin")
-                .setItems(new CharSequence[]{"From Zip File", "From Folder"}, (dialog, which) -> {
-                    if (which == 0) {
-                        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                        intent.addCategory(Intent.CATEGORY_OPENABLE);
-                        intent.setType("application/zip");
-                        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/zip", "application/x-zip-compressed"});
-                        try {
-                            startActivityForResult(intent, REQUEST_CODE_IMPORT_ZIP);
-                        } catch (Exception e) {
-                            showImportError("Couldn't open a file picker on this device.");
-                        }
-                    } else {
-                        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                        try {
-                            startActivityForResult(intent, REQUEST_CODE_IMPORT_FOLDER);
-                        } catch (Exception e) {
-                            showImportError("Couldn't open a folder picker on this device.");
-                        }
-                    }
-                })
-                .show();
-    }
-
-    @Override
-    public void onActivityResultFragment(int requestCode, int resultCode, Intent data) {
-        super.onActivityResultFragment(requestCode, resultCode, data);
-        if (resultCode != Activity.RESULT_OK || data == null || data.getData() == null) {
-            return;
-        }
-        Uri uri = data.getData();
-        if (requestCode == REQUEST_CODE_IMPORT_ZIP) {
-            importZipFromUri(uri);
-        } else if (requestCode == REQUEST_CODE_IMPORT_FOLDER) {
-            importFolderFromUri(uri);
-        }
-    }
-
-    private void importZipFromUri(Uri uri) {
-        File tempZip = new File(ApplicationLoader.applicationContext.getCacheDir(), "flux_import_" + System.currentTimeMillis() + ".zip");
-        try {
-            copyUriToFile(uri, tempZip);
-            CaintPlugin plugin = PluginManager.importFromZip(tempZip);
-            showImportSuccess(plugin);
-        } catch (IOException | PluginManifest.ManifestException e) {
-            showImportError(e.getMessage() != null ? e.getMessage() : "Couldn't import that zip file.");
-        } finally {
-            tempZip.delete();
-        }
-    }
-
-    private void importFolderFromUri(Uri treeUri) {
-        File tempFolder = new File(ApplicationLoader.applicationContext.getCacheDir(), "flux_import_" + System.currentTimeMillis());
-        try {
-            DocumentFile sourceTree = DocumentFile.fromTreeUri(ApplicationLoader.applicationContext, treeUri);
-            if (sourceTree == null || !sourceTree.isDirectory()) {
-                showImportError("Couldn't read that folder.");
-                return;
-            }
-            if (!tempFolder.mkdirs()) {
-                showImportError("Couldn't prepare that folder for import.");
-                return;
-            }
-            copyDocumentTree(sourceTree, tempFolder);
-            CaintPlugin plugin = PluginManager.importFromFolder(tempFolder);
-            showImportSuccess(plugin);
-        } catch (IOException | PluginManifest.ManifestException e) {
-            showImportError(e.getMessage() != null ? e.getMessage() : "Couldn't import that folder.");
-        } finally {
-            deleteRecursive(tempFolder);
-        }
-    }
-
-    private void copyUriToFile(Uri uri, File dest) throws IOException {
-        InputStream in = ApplicationLoader.applicationContext.getContentResolver().openInputStream(uri);
-        if (in == null) {
-            throw new IOException("Couldn't open the selected file.");
-        }
-        try {
-            OutputStream out = new FileOutputStream(dest);
-            try {
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, read);
-                }
-            } finally {
-                out.close();
-            }
-        } finally {
-            in.close();
-        }
-    }
-
-    private void copyDocumentTree(DocumentFile srcDir, File destDir) throws IOException {
-        for (DocumentFile child : srcDir.listFiles()) {
-            if (child.getName() == null) {
-                continue;
-            }
-            File dest = new File(destDir, child.getName());
-            if (child.isDirectory()) {
-                if (!dest.mkdirs()) {
-                    throw new IOException("Couldn't create directory: " + dest.getPath());
-                }
-                copyDocumentTree(child, dest);
-            } else {
-                copyUriToFile(child.getUri(), dest);
-            }
-        }
-    }
-
-    private void deleteRecursive(File file) {
-        if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    deleteRecursive(child);
-                }
-            }
-        }
-        file.delete();
-    }
-
-    private void showImportSuccess(CaintPlugin plugin) {
-        if (getContext() == null) {
-            return;
-        }
-        BulletinFactory.of(this).createSimpleBulletin(R.raw.contact_check, "Imported \"" + plugin.manifest.name + "\"").show();
-        if (listView != null && listView.adapter != null) {
-            listView.adapter.update(true);
-        }
-    }
-
-    private void showImportError(String message) {
-        if (getContext() == null) {
-            return;
-        }
-        BulletinFactory.of(this).createErrorBulletin(message).show();
     }
 
     @Override
