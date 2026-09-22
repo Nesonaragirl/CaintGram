@@ -21,6 +21,7 @@ import org.telegram.ui.ActionBar.BackDrawable;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.BulletinFactory;
+import org.telegram.ui.Components.IconBackgroundColors;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
@@ -44,6 +45,10 @@ import java.util.ArrayList;
  *             "My Plugins" and "Import from File" (zip or folder) are wired
  *             up; Auto-Update Plugins is a placeholder toggle.
  *  - Updates & About: current version, changelog, GitHub repository, and about links.
+ *
+ * Rows use SettingsActivity.SettingCell - the same gradient-icon card used for the
+ * "FluxGram Preferences" entry row (and every other section) on the main Settings screen -
+ * so this feels like a native part of the app rather than a bolted-on plugin panel.
  */
 public class FluxPreferencesActivity extends BaseFragment {
 
@@ -94,17 +99,17 @@ public class FluxPreferencesActivity extends BaseFragment {
     private void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         // Plugins
         items.add(UItem.asHeader("Plugins"));
-        items.add(UItem.asButton(ID_MY_PLUGINS, R.drawable.settings_features, "My Plugins", "3"));
+        items.add(SettingsActivity.SettingCell.Factory.of(ID_MY_PLUGINS, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "My Plugins", null, "3"));
         items.add(UItem.asSwitch(ID_AUTO_UPDATE_PLUGINS, "Auto-Update Plugins").setChecked(autoUpdatePlugins));
-        items.add(UItem.asButton(ID_IMPORT_FROM_FILE, "Import from File", ""));
+        items.add(SettingsActivity.SettingCell.Factory.of(ID_IMPORT_FROM_FILE, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.settings_data, "Import from File"));
         items.add(UItem.asShadow(null));
 
         // Updates & About
         items.add(UItem.asHeader("Updates & About"));
-        items.add(UItem.asButton(ID_VERSIONS, "Versions", FLUXGRAM_VERSION));
-        items.add(UItem.asButton(ID_CHANGELOG, "Changelog"));
-        items.add(UItem.asButton(ID_GITHUB_REPOSITORY, "GitHub Repository"));
-        items.add(UItem.asButton(ID_ABOUT_FLUXGRAM, "About FluxGram"));
+        items.add(SettingsActivity.SettingCell.Factory.of(ID_VERSIONS, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_devices, "Versions", null, FLUXGRAM_VERSION));
+        items.add(SettingsActivity.SettingCell.Factory.of(ID_CHANGELOG, IconBackgroundColors.BLUE_LIGHT.top, IconBackgroundColors.BLUE_LIGHT.bottom, R.drawable.settings_faq, "Changelog"));
+        items.add(SettingsActivity.SettingCell.Factory.of(ID_GITHUB_REPOSITORY, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.msg_link2, "GitHub Repository"));
+        items.add(SettingsActivity.SettingCell.Factory.of(ID_ABOUT_FLUXGRAM, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_policy, "About FluxGram"));
         items.add(UItem.asShadow(null));
     }
 
