@@ -23,6 +23,12 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: false
+          packages: ''
+
+      - name: Accept SDK licenses (non-interactive)
+        run: yes | sdkmanager --licenses > /dev/null || true
 
       - name: Cache Android SDK components (NDK/CMake)
         id: sdk-cache
@@ -38,7 +44,6 @@ jobs:
       - name: Install SDK components (platform, build-tools, NDK, CMake)
         if: steps.sdk-cache.outputs.cache-hit != 'true'
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018" "cmake;3.10.2.4988404"
 
       - name: Cache Gradle packages
