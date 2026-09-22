@@ -51,6 +51,7 @@ public final class PluginManager {
     private static final String PLUGINS_DIR_NAME = "caint_plugins";
     private static final String MANIFEST_FILE_NAME = "manifest.json";
     private static final String VISIBILITY_PREFS_NAME = "caint_plugin_visibility";
+    private static final String SETTINGS_PREFS_NAME = "caint_plugin_settings";
     private static final String IMPORT_STAGING_PREFIX = "._import_";
 
     private static final List<CaintPlugin> loadedPlugins = new ArrayList<>();
@@ -150,6 +151,20 @@ public final class PluginManager {
 
     private static SharedPreferences getVisibilityPrefs() {
         return ApplicationLoader.applicationContext.getSharedPreferences(VISIBILITY_PREFS_NAME, Context.MODE_PRIVATE);
+    }
+
+    /** Current value of one of a plugin's declared on/off settings (see PluginManifest.PluginSetting). */
+    public static boolean getPluginSetting(String pluginId, String settingKey, boolean defaultValue) {
+        return getSettingsPrefs().getBoolean(pluginId + ":" + settingKey, defaultValue);
+    }
+
+    /** Persists a plugin's on/off setting, keyed by plugin id so it survives reloads. */
+    public static void setPluginSetting(String pluginId, String settingKey, boolean value) {
+        getSettingsPrefs().edit().putBoolean(pluginId + ":" + settingKey, value).apply();
+    }
+
+    private static SharedPreferences getSettingsPrefs() {
+        return ApplicationLoader.applicationContext.getSharedPreferences(SETTINGS_PREFS_NAME, Context.MODE_PRIVATE);
     }
 
     /**
