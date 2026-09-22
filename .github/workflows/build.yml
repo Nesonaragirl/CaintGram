@@ -56,13 +56,35 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
+      # this is the one that actually matters - native C++ (boringssl/ffmpeg/webrtc) was
+      # getting fully recompiled every single run, which is where most of the 45min went
+      - name: Cache ccache (native C++ compile cache)
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-arm64-${{ github.sha }}
+          restore-keys: |
+            ccache-arm64-
+
+      - name: Install ccache
+        run: sudo apt-get update -y && sudo apt-get install -y ccache
+
+      - name: Configure ccache
+        run: |
+          ccache --max-size=2G
+          ccache --set-config=compression=true
+          echo "CCACHE_DIR=$HOME/.ccache" >> "$GITHUB_ENV"
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build arm64 debug APK (fast, single-ABI - covers Redmi/HyperOS and virtually all modern phones)
-        run: ./gradlew :TMessagesProj_App:assembleArm64Debug --stacktrace --build-cache
+        run: ./gradlew :TMessagesProj_App:assembleArm64Debug --stacktrace --build-cache --parallel
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
+
+      - name: ccache stats
+        run: ccache --show-stats
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
